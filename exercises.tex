@@ -1,0 +1,265 @@
+\documentclass[11pt, a4paper]{scrartcl}
+
+% Core packages.
+\usepackage[USenglish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[top=1.5cm, left=1.5cm, right=1.5cm, bottom=2.5cm]{geometry}
+% Math packages.
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{cancel}
+\usepackage{mathtools}
+\usepackage{physics}
+\usepackage{siunitx}
+% Other packages.
+\usepackage{csquotes}
+\usepackage[hidelinks=true]{hyperref}
+\usepackage{xspace}
+
+% Document information.
+\title{Gaussian Processes for Machine Learning}
+\subtitle{Exercises}
+\author{Fabian Damken}
+\date{\today}
+
+% Styling.
+\MakeOuterQuote{"}
+\mathtoolsset{showonlyrefs, showmanualtags}
+
+% Macros.
+% Math.
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Var}{\mathbb{V}}
+\DeclareMathOperator{\cov}{cov}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\normal}{\mathcal{N}}
+\newcommand{\transposed}{{\!\top\!}}
+\renewcommand{\vec}[1]{\bm{#1}}
+\newcommand{\mat}[1]{\bm{\mathrm{#1}}}
+\newcommand{\given}{\,\vert\,}
+\newcommand{\biggiven}{\,\big\vert\,}
+\newcommand{\Biggiven}{\,\Big\vert\,}
+\newcommand{\bigggiven}{\,\bigg\vert\,}
+\newcommand{\Bigggiven}{\,\Bigg\vert\,}
+\newcommand{\qed}{\hfill\(\Box\)}
+% Other.
+\newcommand{\github}{\href{https://github.com/fdamken/gpml}{GitHub}\footnote{\url{https://github.com/fdamken/gpml}}\xspace}
+\newcommand{\seegithub}{See \github.}
+\newcommand{\task}[2]{\subsection*{Task #1: #2}}
+
+\begin{document}
+	\maketitle
+
+	\section*{Chapter 1: Introduction}
+		No exercises given.
+	% end
+
+	\section*{Chapter 2: Regression}
+		\task{1}{Implementing a Gaussian Process}
+			\seegithub
+		% end
+
+		\task{2}{Predictive Covariance of Linear Model}
+			With the regression model \( f(\vec{x}) = \vec{\phi}^\transposed(\vec{x}) \vec{w} \), the weight posterior is given as
+			\begin{equation}
+				\vec{w} \given \mat{X}, \vec{y} \sim \normal\big( \underbrace{\sigma_n^2 \mat{A}^{-1} \mat{X} \vec{y}}_{\bar{\vec{w}} \,\coloneqq},\, \mat{A}^{-1} \big)
+			\end{equation}
+			with \( \mat{A} = \sigma_n^{-2} \mat{X} \mat{X}^\transposed + \mat{\Sigma}_p^{-1} \). The posterior covariance \( \cov\!\big[ f(\vec{x}_\ast), f(\vec{x}_\ast') \big] \) can be decomposed into
+			\begin{equation}
+				\cov\!\big[ f(\vec{x}_\ast), f(\vec{x}_\ast') \big] = \E\big[ f(\vec{x}_\ast) f(\vec{x}_\ast') \big] - \E\big[ f(\vec{x}_\ast) \big] \E\big[ f(\vec{x}_\ast') \big].  \label{eq:ch2ex1cov}
+			\end{equation}
+			The expectations can now be evaluated independently from each other for brevity:
+			\begin{align}
+				\E\big[ f(\vec{x}_\ast) f(\vec{x}_\ast') \big]
+					&= \E\big[ \vec{\phi}^\transposed(\vec{x}_\ast) \vec{w} \vec{\phi}^\transposed(\vec{x}_\ast') \vec{w} \big]
+					= \E\big[ \vec{\phi}^\transposed(\vec{x}_\ast) \vec{w} \vec{w}^\transposed \vec{\phi}(\vec{x}_\ast') \big] \\
+					&= \vec{\phi}^\transposed(\vec{x}_\ast) \E\big[ \vec{w} \vec{w}^\transposed \big] \vec{\phi}(\vec{x}_\ast')
+					= \vec{\phi}^\transposed(\vec{x}_\ast) \big( \bar{\vec{w}} \bar{\vec{w}}^\transposed + \mat{A}^{-1} \big) \vec{\phi}(\vec{x}_\ast') \\
+				\E\big[ f(\vec{x}_\ast) \big]
+					&= \E\big[ \vec{\phi}^\transposed(\vec{x}_\ast) \vec{w} \big]
+					= \vec{\phi}^\transposed(\vec{x}_\ast) \E\big[ \vec{w} \big]
+					= \vec{\phi}^\transposed(\vec{x}_\ast) \bar{\vec{w}}.
+			\end{align}
+			Plugging all this into \eqref{eq:ch2ex1cov} yields the posterior predictive covariance:
+			\begin{align}
+				\cov\!\big[ f(\vec{x}_\ast), f(\vec{x}_\ast') \big]
+					&= \vec{\phi}^\transposed(\vec{x}_\ast) \big( \bar{\vec{w}} \bar{\vec{w}}^\transposed + \mat{A}^{-1} \big) \vec{\phi}(\vec{x}_\ast') - \big( \vec{\phi}^\transposed(\vec{x}_\ast) \bar{\vec{w}} \big) \big( \vec{\phi}^\transposed(\vec{x}_\ast') \bar{\vec{w}} \big) \\
+					&= \vec{\phi}^\transposed(\vec{x}_\ast) \big( \bar{\vec{w}} \bar{\vec{w}}^\transposed + \mat{A}^{-1} \big) \vec{\phi}(\vec{x}_\ast') - \vec{\phi}^\transposed(\vec{x}_\ast) \bar{\vec{w}} \bar{\vec{w}}^\transposed \vec{\phi}(\vec{x}_\ast')
+					= \vec{\phi}^\transposed(\vec{x}_\ast) \mat{A}^{-1} \vec{\phi}(\vec{x}_\ast')
+			\end{align}
+
+			\qed
+		% end
+
+		\task{3}{Wiener Process and Brownian Bridge}
+			The scalar Wiener process prior is given as
+			\begin{equation}
+				\vec{f}_\ast \given \vec{x}_\ast \sim \normal\big( \vec{0}, \mat{K}(\vec{x}_\ast, \vec{x}_\ast) \big)
+			\end{equation}
+			with the kernel \( k(x, x') = \min\{ x, x' \} \). By decomposing the Gaussian distribution into training- and test-points
+			\begin{equation}
+				\begin{bmatrix}
+					\vec{f} \\
+					\vec{f}_\ast
+				\end{bmatrix}
+				\sim
+				\normal\Bigg(\! \vec{0},
+					\begin{bmatrix}
+						\mat{K}(\vec{x}, \vec{x})      & \mat{K}(\vec{x}, \vec{x}_\ast) \\
+						\mat{K}(\vec{x}_\ast, \vec{x}) & \mat{K}(\vec{x}_\ast, \vec{x}_\ast)
+					\end{bmatrix} \!\!\Bigg),
+			\end{equation}
+			the distribution can be easily conditioned on the training points, yielding the following distribution:
+			\begin{align}
+				\vec{f}_\ast \given \vec{x}_\ast, \vec{x}, \vec{f}
+					\sim \normal\big(
+						&\mat{K}(\vec{x}_\ast, \vec{x}) \mat{K}^{-1}(\vec{x}, \vec{x}) \vec{f},\, \\
+						&\mat{K}(\vec{x}_\ast, \vec{x}_\ast) - \mat{K}(\vec{x}_\ast, \vec{x}) \mat{K}^{-1}(\vec{x}, \vec{x}) \mat{K}(\vec{x}, \vec{x}_\ast)
+					\big).
+			\end{align}
+			By conditioning the distribution on \( f(1) = 0 \), i.e., \( \vec{f} \equiv f = 1 \) and \( \vec{x} \equiv x = 0 \), the mean of the posterior vanishes:
+			\begin{equation}
+				\mat{K}(\vec{x}_\ast, \vec{x}) \mat{K}^{-1}(\vec{x}, \vec{x}) \vec{f}
+					= \mat{K}(\vec{x}_\ast, \vec{x}) \mat{K}^{-1}(\vec{x}, \vec{x}) \cdot 0
+					= 0
+			\end{equation}
+			With the above conditioning, the predictive posterior covariance becomes such that it can be represented by the kernel \( k'(x, x') = \min\{ x, x' \} - x x' \):
+			\begin{equation}
+				\mat{K}(\vec{x}_\ast, \vec{x}_\ast) - \mat{K}(\vec{x}_\ast, \vec{x}) \cancel{\mat{K}^{-1}(\vec{x}, \vec{x})} \mat{K}(\vec{x}, \vec{x}_\ast)
+					= \mat{K}(\vec{x}_\ast, \vec{x}_\ast) - \vec{k}(\vec{x}_\ast, 1) \vec{k}(1, \vec{x}_\ast)
+					= \mat{K}(\vec{x}_\ast, \vec{x}_\ast) - \vec{x}_\ast \vec{x}_\ast^\transposed
+					= \mat{K}'(\vec{x}_\ast, \vec{x}_\ast)
+			\end{equation}
+
+			\qed
+
+			See \github for the computer program for sampling from the Wiener process and the Brownian bridge.
+		% end
+
+		\task{4}{Reduction of Variance}
+			Let \( \mat{X}_n \coloneqq \begin{bmatrix} \mat{X}_{n - 1} & \vec{x}_n \end{bmatrix} \) be all training points, separated intro the first \(n - 1\) and the \(n\)-th points. It is to be shown that
+			\begin{equation}
+				\Var_n\big[ f(\vec{x}_\ast) \big] \leq \Var_{n - 1}\big[ f(\vec{x}_\ast) \big]  \label{eq:ch2ex4ineq}
+			\end{equation}
+			holds with\footnote{Let \( \mat{K}_n \coloneqq \mat{K}(\mat{X}_n, \mat{X}_n) \), \( \vec{k}_{n - 1} \coloneqq \vec{k}(\mat{X}_{n - 1}, \vec{x}_n) \), \( \vec{k}_{\ast, n} \coloneqq \vec{k}(\mat{X}_n, \vec{x}_\ast) \), \( k_n \coloneqq k(\vec{x}_n, \vec{x}_n) \), and \( k_\ast \coloneqq k(\vec{x}_\ast, \vec{x}_n) \) for brevity.}
+			\begin{align}
+				\Var_n\big[ f(\vec{x}_\ast) \big]
+					&\coloneqq k(\vec{x}_\ast, \vec{x}_\ast) - \vec{k}_{\ast, n}^\transposed \, \big( \mat{K}_n + \sigma_n^2 \mat{I}_n \big)^{-1} \vec{k}_{\ast, n} \\
+				\Var_{n - 1}\big[ f(\vec{x}_\ast) \big]
+					&\coloneqq k(\vec{x}_\ast, \vec{x}_\ast) - \vec{k}_{\ast, n - 1}^\transposed \, \big( \mat{K}_{n - 1} + \sigma_n^2 \mat{I}_{n - 1} \big)^{-1} \vec{k}_{\ast, n - 1},
+			\end{align}
+			i.e., that the variance at any point \( \vec{x}_\ast \) does not increase when adding more training data. Showing that the inequality \eqref{eq:ch2ex4ineq} holds is equivalent to showing that
+			\begin{equation}
+				\vec{k}_{\ast, n}^\transposed \big( \mat{K}_n + \sigma_n^2 \mat{I}_n \big)^{-1} \vec{k}_{\ast, n}
+				\geq
+				\vec{k}_{\ast, n - 1}^\transposed \big( \mat{K}_{n - 1} + \sigma_n^2 \mat{I}_{n - 1} \big)^{-1} \vec{k}_{\ast, n - 1}
+				\label{eq:ch2ex4ineq2}
+			\end{equation}
+			holds. The matrix \( \mat{A} \coloneqq \mat{K}_n + \sigma_n^2 \mat{I}_n \) can be decomposed into
+			\begin{equation}
+				\mat{K} + \sigma_n^2 \mat{I}_n =
+					\begin{bmatrix}
+						\mat{K}_{n - 1} + \sigma_n^2 \mat{I}_{n - 1} & \vec{k}_{n - 1} \\
+						\vec{k}_{n - 1}^\transposed                  & k_n + \sigma_n^2
+					\end{bmatrix}
+				\eqqcolon
+					\begin{bmatrix}
+						\mat{P}             & \vec{q} \\
+						\vec{q}^\transposed & s
+					\end{bmatrix}\!.
+			\end{equation}
+			By definition, \(\mat{A}\), \(\mat{P}\), and \(s\) are all positive definite as well as their inverses. With the decomposition \( \vec{k}_{\ast, n}^\transposed = \begin{bmatrix} \vec{k}_{\ast, n - 1}^\transposed & k_\ast \end{bmatrix} \) and the inverse
+			\begin{equation}
+				\mat{A}^{-1} \coloneqq
+					\begin{bmatrix}
+						\tilde{\mat{P}}             & \tilde{\vec{q}} \\
+						\tilde{\vec{q}}^\transposed & \tilde{s}
+					\end{bmatrix}
+			\end{equation}
+			of \(\mat{A}\), the left-hand-side of \eqref{eq:ch2ex4ineq2} becomes
+			\begin{align}
+				\vec{k}_{\ast, n}^\transposed \mat{A}^{-1} \vec{k}_{\ast, n}
+					&=
+						\begin{bmatrix}
+							\vec{k}_{\ast, n - 1}^\transposed & k_\ast
+						\end{bmatrix}
+						\begin{bmatrix}
+							\tilde{\mat{P}}             & \tilde{\vec{q}} \\
+							\tilde{\vec{q}}^\transposed & \tilde{s}
+						\end{bmatrix}
+						\begin{bmatrix}
+							\vec{k}_{\ast, n - 1} \\
+							k_\ast
+						\end{bmatrix} \\
+					&=
+						\begin{bmatrix}
+							\vec{k}_{\ast, n - 1}^\transposed & k_\ast
+						\end{bmatrix}
+						\begin{bmatrix}
+							\tilde{\mat{P}} \vec{k}_{\ast, n - 1} + \tilde{\vec{q}} k_\ast \\
+							\tilde{\vec{q}}^\transposed \vec{k}_{\ast, n - 1} + \tilde{s} k_\ast
+						\end{bmatrix} \\
+					&= \vec{k}_{\ast, n - 1}^\transposed \big( \tilde{\mat{P}} \vec{k}_{\ast, n - 1} + \tilde{\vec{q}} k_\ast \big) + k_\ast \big( \tilde{\vec{q}}^\transposed \vec{k}_{\ast, n - 1} + \tilde{s} k_\ast \big) \\
+					&= \vec{k}_{\ast, n - 1}^\transposed \tilde{\mat{P}} \vec{k}_{\ast, n - 1} + \vec{k}_{\ast, n - 1}^\transposed \tilde{\vec{q}} k_\ast + k_\ast \tilde{\vec{q}}^\transposed \vec{k}_{\ast, n - 1} + k_\ast \tilde{s} k_\ast \\
+					&= \vec{k}_{\ast, n - 1}^\transposed \tilde{\mat{P}} \vec{k}_{\ast, n - 1} + 2 \vec{k}_{\ast, n - 1}^\transposed \tilde{\vec{q}} k_\ast + k_\ast \tilde{s} k_\ast \\
+					&= \vec{k}_{\ast, n - 1}^\transposed \big( \mat{P}^{-1} + \mat{P}^{-1} \vec{k}_{n - 1} \tilde{s} \vec{k}_{n - 1}^\transposed \mat{P}^{-1} \big) \vec{k}_{\ast, n - 1} - 2 \vec{k}_{\ast, n - 1}^\transposed \mat{P}^{-1} \vec{k}_{n - 1} \tilde{s} k_\ast + k_\ast \tilde{s} k_\ast \\
+					&= \vec{k}_{\ast, n - 1}^\transposed \mat{P}^{-1} \vec{k}_{\ast, n - 1} + \vec{k}_{\ast, n - 1}^\transposed \mat{P}^{-1} \vec{k}_{n - 1} \tilde{s} \vec{k}_{n - 1}^\transposed \mat{P}^{-1} \vec{k}_{\ast, n - 1} - 2 \vec{k}_{\ast, n - 1}^\transposed \mat{P}^{-1} \vec{k}_{n - 1} \tilde{s} k_\ast + k_\ast \tilde{s} k_\ast,  \label{eq:ch2ex4lhs}
+			\end{align}
+			where in the second last step the entries \( \tilde{\mat{P}} \) and \( \tilde{\vec{q}} \) of \( \mat{A}^{-1} \),
+			\begin{align}
+				\tilde{\mat{P}} &= \mat{P}^{-1} + \mat{P}^{-1} \vec{q} \tilde{s} \vec{q}^\transposed \mat{P}^{-1}
+				&
+				\tilde{\vec{q}} &= -\mat{P}^{-1} \vec{q} \tilde{s} \\
+				                &= \mat{P}^{-1} + \mat{P}^{-1} \vec{k}_{n - 1} \tilde{s} \vec{k}_{n - 1}^\transposed \mat{P}^{-1}
+				&
+				                &= -\mat{P}^{-1} \vec{k}_{n - 1} \tilde{s},
+			\end{align}
+			were plugged in. As the first term of \eqref{eq:ch2ex4lhs} and \eqref{eq:ch2ex4ineq2} are equivalent, the inequality reduces to
+			\begin{equation}
+				\vec{k}_{\ast, n - 1}^\transposed \mat{P}^{-1} \vec{k}_{n - 1} \tilde{s} \vec{k}_{n - 1}^\transposed \mat{P}^{-1} \vec{k}_{\ast, n - 1} - 2 \vec{k}_{\ast, n - 1}^\transposed \mat{P}^{-1} \vec{k}_{n - 1} \tilde{s} k_\ast + k_\ast \tilde{s} k_\ast \geq 0.
+			\end{equation}
+			This can be shown by "completing the square":
+			\begin{align}
+				 &\; \vec{k}_{\ast, n - 1}^\transposed \mat{P}^{-1} \vec{k}_{n - 1} \tilde{s} \vec{k}_{n - 1}^\transposed \mat{P}^{-1} \vec{k}_{\ast, n - 1} - 2 \vec{k}_{\ast, n - 1}^\transposed \mat{P}^{-1} \vec{k}_{n - 1} \tilde{s} k_\ast + k_\ast \tilde{s} k_\ast \\
+				=&\; \tilde{s} \big( \vec{k}_{\ast, n - 1}^\transposed \mat{P}^{-1} \vec{k}_{n - 1} \big)^2 - 2 \tilde{s} k_\ast \vec{k}_{\ast, n - 1}^\transposed \mat{P}^{-1} \vec{k}_{n - 1} + \tilde{s} k_\ast^2 \\
+				% Completing the Square:
+				%     a = \tilde{s}
+				%     b = -2 \tilde{s} k_\ast
+				%     c = \tilde{s} k_\ast^2
+				%     x = \vec{k}_{\ast, n - 1}^\transposed \mat{P}^{-1} \vec{k}_{n - 1}
+				%  = (x - h)^2 + k
+				%     h = -b / 2 = \tilde{s} k_\ast
+				%     k = c - b^2 / 4 = \tilde{s} k_\ast^2 + \tilde{s} k_\ast
+				=&\; \underbrace{\tilde{s} \big( \vec{k}_{\ast, n - 1}^\transposed \mat{P}^{-1} \vec{k}_{n - 1} - \tilde{s} k_\ast \big)^2}_{\geq\, 0} + \underbrace{\tilde{s} k_\ast (k_\ast + 1)}_{\geq\, 0} \geq 0
+			\end{align}
+			Hence, inequality \autoref{eq:ch2ex4ineq2} holds and the variance at any point \( \vec{x}_\ast \) of a Gaussian process does not rise when adding more training data.
+
+			\qed
+		% end
+	% end
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
