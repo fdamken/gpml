@@ -52,8 +52,9 @@ def prior(X):
 
 
 def posterior(X, X_ast, f):
-    mean = K(X_ast, X) @ np.linalg.inv(K(X, X)) @ f
-    cov = K(X_ast, X_ast) - K(X_ast, X) @ np.linalg.inv(K(X, X)) @ K(X, X_ast)
+    training_weights = K(X_ast, X) @ np.linalg.inv(K(X, X))
+    mean = training_weights @ f
+    cov = K(X_ast, X_ast) - training_weights @ K(X, X_ast)
     return mean, cov
 
 
