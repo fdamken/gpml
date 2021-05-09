@@ -7,6 +7,7 @@ import matplotlib_tuda
 
 matplotlib_tuda.load()
 np.random.seed(12345)
+os.mkdir("figures")
 
 
 def sample_prior(domain):
@@ -68,7 +69,7 @@ def posterior(X, X_ast, f):
     ax.set_title("Training Weights (Ornstein-Uhlenbeck)")
     fig.colorbar(mappable)
     fig.show()
-    fig.savefig(__file__.replace(".py", "") + "-posterior-weights.pdf")
+    fig.savefig("figures/" + os.path.basename(__file__).replace(".py", "") + "-posterior-weights.pdf")
     return mean, cov
 
 

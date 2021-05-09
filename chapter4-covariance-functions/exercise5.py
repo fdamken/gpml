@@ -7,6 +7,7 @@ import matplotlib_tuda
 
 matplotlib_tuda.load()
 np.random.seed(12345)
+os.mkdir("figures")
 
 
 def sample_prior(domain, K):
@@ -40,7 +41,8 @@ def plot_distribution(domain, mean, cov, actual_samples=None, training_points=No
     ax.legend()
     ax.margins(x=0)
     fig.show()
-    fig.savefig(__file__.replace(".py", "") + "-" + filename + ".pdf")
+    if filename is not None:
+        fig.savefig("figures/" + os.path.basename(__file__).replace(".py", "") + "-" + filename + ".pdf")
 
 
 def plot_length_scale(domain, length_scale_fn, name=None, filename=None):

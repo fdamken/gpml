@@ -7,6 +7,7 @@ import matplotlib_tuda
 
 matplotlib_tuda.load()
 np.random.seed(12345)
+os.mkdir("figures")
 
 
 def sample_prior(domain, K):
