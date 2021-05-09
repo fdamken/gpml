@@ -1,3 +1,4 @@
+import os
 from collections.abc import Iterable
 
 import numpy as np
@@ -39,7 +40,8 @@ def plot_distribution(domain, mean, cov, actual_samples=None, training_points=No
     ax.legend()
     ax.margins(x=0)
     fig.show()
-    fig.savefig(__file__.replace(".py", "") + "-" + filename + ".pdf")
+    if filename is not None:
+        fig.savefig("figures/" + os.path.basename(__file__).replace(".py", "") + "-" + filename + ".pdf")
 
 
 def kernel_neural_network(p, q, Sigma):

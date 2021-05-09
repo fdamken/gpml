@@ -1,3 +1,4 @@
+import os
 from collections.abc import Iterable
 
 import numpy as np
@@ -20,7 +21,7 @@ def sample_prior(domain):
     return samples, prior_fn
 
 
-def plot_distribution(domain, mean, cov, actual_samples=None, training_points=None, num_samples=3, title=None):
+def plot_distribution(domain, mean, cov, actual_samples=None, training_points=None, num_samples=3, title=None, filename=None):
     all_samples = np.random.multivariate_normal(mean, cov, size=num_samples)
     fig, ax = plt.subplots()
     ax.plot(domain, mean, label="Mean", zorder=1)
@@ -39,6 +40,8 @@ def plot_distribution(domain, mean, cov, actual_samples=None, training_points=No
     ax.legend()
     ax.margins(x=0)
     fig.show()
+    if filename is not None:
+        fig.savefig("figures/" + os.path.basename(__file__).replace(".py", "") + "-" + filename + ".pdf")
 
 
 def K(p, q):
@@ -61,10 +64,12 @@ def posterior(X, X_ast, f):
 def main():
     domain = np.arange(-5, 5, 0.1)
     actual_samples, prior_fn = sample_prior(domain)
-    plot_distribution(domain, *prior(domain), actual_samples=actual_samples, title="Prior (SE Kernel)")
+    plot_distribution(domain, *prior(domain), actual_samples=actual_samples, title="Prior (SE Kernel)", filename="prior")
     for training_points in [(0,), (-3, 0, 3)]:
         X, f = prior_fn(training_points)
-        plot_distribution(domain, *posterior(X, domain, f), actual_samples=actual_samples, training_points=(X, f), title=f"Posterior (SE Kernel, {len(training_points)} Data Points)")
+        n = len(training_points)
+        plot_distribution(domain, *posterior(X, domain, f), actual_samples=actual_samples, training_points=(X, f), title=f"Posterior (SE Kernel, {n} Data Points)",
+                          filename=f"posterior-n{n}")
 
 
 if __name__ == '__main__':

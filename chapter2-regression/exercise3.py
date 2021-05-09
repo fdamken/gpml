@@ -1,3 +1,4 @@
+import os
 from collections.abc import Iterable
 
 import numpy as np
@@ -20,7 +21,7 @@ def sample_prior(domain):
     return samples, prior_fn
 
 
-def plot_distribution(domain, mean, cov, actual_samples=None, training_points=None, num_samples=3, title=None):
+def plot_distribution(domain, mean, cov, actual_samples=None, training_points=None, num_samples=3, title=None, filename=None):
     all_samples = np.random.multivariate_normal(mean, cov, size=num_samples)
     fig, ax = plt.subplots()
     ax.plot(domain, mean, label="Mean", zorder=1)
@@ -39,6 +40,8 @@ def plot_distribution(domain, mean, cov, actual_samples=None, training_points=No
     ax.legend()
     ax.margins(x=0)
     fig.show()
+    if filename is not None:
+        fig.savefig("figures/" + os.path.basename(__file__).replace(".py", "") + "-" + filename + ".pdf")
 
 
 def K(p, q):
@@ -60,10 +63,10 @@ def posterior(X, X_ast, f):
 
 def main():
     domain = np.arange(0, 1, 0.01)
-    plot_distribution(domain, *prior(domain), title="Prior (Wiener Process)")
+    plot_distribution(domain, *prior(domain), title="Prior (Wiener Process)", filename="prior")
     X = np.array([1.0])
     f = np.array([0.0])
-    plot_distribution(domain, *posterior(X, domain, f), training_points=(X, f), title="Posterior (Brownian Bridge)")
+    plot_distribution(domain, *posterior(X, domain, f), training_points=(X, f), title="Posterior (Brownian Bridge)", filename="posterior")
 
 
 if __name__ == '__main__':
